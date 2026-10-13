@@ -1,0 +1,74 @@
+[
+ {
+  "id": "washer_door",
+  "home": "Home 1",
+  "title": "Laundry cabinet",
+  "task": "Open the cabinet door beside the washing machine",
+  "jtype": "hinge",
+  "success": true,
+  "why": ""
+ },
+ {
+  "id": "microwave_300b",
+  "home": "Home 2",
+  "title": "Microwave",
+  "task": "Open the microwave door",
+  "jtype": "hinge",
+  "success": true,
+  "why": ""
+ },
+ {
+  "id": "nightstand_drawer",
+  "home": "Home 3",
+  "title": "Nightstand",
+  "task": "Pull out the nightstand drawer",
+  "jtype": "slide",
+  "success": true,
+  "why": ""
+ },
+ {
+  "id": "fridge_447a",
+  "home": "Home 4",
+  "title": "Refrigerator",
+  "task": "Open the refrigerator door",
+  "jtype": "hinge",
+  "success": true,
+  "why": ""
+ },
+ {
+  "id": "chest_e73f",
+  "home": "Home 6",
+  "title": "Chest of drawers",
+  "task": "Pull out a drawer of the chest",
+  "jtype": "slide",
+  "success": true,
+  "why": ""
+ },
+ {
+  "id": "door_85ca",
+  "home": "Home 8",
+  "title": "Room door",
+  "task": "Open the room door",
+  "jtype": "hinge",
+  "success": true,
+  "why": ""
+ },
+ {
+  "id": "window",
+  "home": "Home 9",
+  "title": "Window",
+  "task": "Open the window sash",
+  "jtype": "hinge",
+  "success": true,
+  "why": ""
+ },
+ {
+  "id": "shoecab_23be",
+  "home": "Home 11",
+  "title": "Shoe cabinet",
+  "task": "Pull out the shoe cabinet drawer",
+  "jtype": "slide",
+  "success": true,
+  "why": ""
+ }
+]

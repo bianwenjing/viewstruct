@@ -1,0 +1,693 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ViewStruct</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* layout: one left-aligned reading column (max 72ch) with figures and tables breaking out to the full 1120px measure */
+:root{
+  color-scheme: light;
+  --bg:#ffffff; --card:#f6f7f9; --ink:#1f2328; --mut:#5c6670; --rule:#dde1e6; --accent:#1f4fb5;
+  --hinge:#c8402f; --slide:#2764c2; --axis:#a97a00; --ours:#eaf0fb;
+  --stage:#1c2127; --stage-ink:#f2f4f6; --stage-mut:#b6c0c9; --stage-veil:rgba(14,17,20,.72); --pred:#e0b400; --pred-ink:#1b1600; --ref:#2aa198; --robot:#ff7a3d; --ok:#1f7a4d;
+  --display:"Source Sans 3",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+  --body:"Source Sans 3",system-ui,-apple-system,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --bg:#15181c; --card:#1e2227; --ink:#e8eaed; --mut:#9aa3ad; --rule:#30363d; --accent:#7fa6ff;
+    --hinge:#ef6a58; --slide:#6aa2ff; --axis:#f0c53c; --ours:#1f2a40;
+    --stage:#0c1014; --stage-ink:#f2f4f6; --stage-mut:#b6c0c9; --stage-veil:rgba(8,10,12,.72); --pred:#e0b400; --pred-ink:#1b1600; --ref:#2aa198; --robot:#ff7a3d; --ok:#5fcf95;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --bg:#15181c; --card:#1e2227; --ink:#e8eaed; --mut:#9aa3ad; --rule:#30363d; --accent:#7fa6ff;
+  --hinge:#ef6a58; --slide:#6aa2ff; --axis:#f0c53c; --ours:#1f2a40;
+  --stage:#0c1014; --stage-ink:#f2f4f6; --stage-mut:#b6c0c9; --stage-veil:rgba(8,10,12,.72); --pred:#e0b400; --pred-ink:#1b1600; --ref:#2aa198; --robot:#ff7a3d; --ok:#5fcf95;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:17px/1.6 var(--body);margin:0}
+.wrap{max-width:940px;margin:0 auto;padding-inline:20px;padding-block:44px 80px;display:flex;flex-direction:column;gap:56px}
+h1{font:700 clamp(34px,5vw,54px)/1.05 var(--display);letter-spacing:-.01em;margin:0;text-wrap:balance}
+h1 span{display:block;font-weight:400;font-size:clamp(18px,2.2vw,24px);line-height:1.3;margin-top:10px;color:var(--mut)}
+h2{font:700 clamp(22px,2.6vw,28px)/1.2 var(--display);margin:0;padding-bottom:8px;border-bottom:1px solid var(--rule);text-wrap:balance}
+h3{font:600 1.05rem/1.3 var(--body);margin:0}
+h3.sub{font:600 clamp(19px,2.2vw,23px)/1.25 var(--display);letter-spacing:-.005em;text-wrap:balance;scroll-margin-top:56px}
+h3.sub span{font:400 .95rem var(--body);color:var(--mut);margin-left:10px;letter-spacing:0}
+h2 .h2sub{font:400 .95rem/1.3 var(--body);color:var(--mut);margin-left:12px}
+p{margin:0;max-width:none}
+header p{max-width:none}
+a{color:var(--accent)}
+a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+header{display:flex;flex-direction:column;gap:20px}
+.authors{font-size:1.1rem}
+.authors small{display:block;color:var(--mut);font-size:.95rem}
+.authors sup{font-size:.7em;color:var(--mut)}
+.chips{display:flex;flex-wrap:wrap;gap:10px}
+.chip{font:600 .9rem var(--body);border:1px solid var(--ink);border-radius:999px;padding:7px 16px;background:var(--ink);color:var(--bg);text-decoration:none}
+a.chip:hover{background:var(--accent);border-color:var(--accent);color:#fff}
+.chip.off{background:transparent;color:var(--mut);border-color:var(--rule)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 20px;font-size:.92rem;color:var(--mut)}
+.legend i{display:inline-block;width:22px;height:4px;border-radius:2px;vertical-align:middle;margin-right:7px}
+section{display:flex;flex-direction:column;gap:18px}
+figure{margin:0;display:flex;flex-direction:column;gap:8px}
+figure img,figure video{display:block;width:100%;border-radius:6px;border:1px solid var(--rule);background:var(--card)}
+figcaption{font-size:.92rem;color:var(--mut)}
+.ideas{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:22px}
+.idea{border-top:3px solid var(--rule);padding-top:12px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.idea{border-color:var(--accent)}
+.idea p{font-size:.98rem;color:var(--mut)}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px;align-items:start}
+.two > *{min-width:0}
+.tbl{overflow-x:auto;border:1px solid var(--rule);border-radius:6px;background:var(--card)}
+table{border-collapse:collapse;width:100%;font-size:.92rem;font-variant-numeric:tabular-nums}
+th,td{padding:7px 7px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--rule)}
+th:first-child,td:first-child{text-align:left}
+thead th{font-weight:600;color:var(--mut);font-size:.78rem;letter-spacing:.02em;white-space:normal;max-width:9ch;vertical-align:bottom}
+tbody tr:last-child td{border-bottom:none}
+td{font-family:var(--mono);font-size:.8rem}
+td:first-child{font-family:var(--body);font-size:.95rem}
+tr.ours td{background:var(--ours);font-weight:500}
+td b{font-weight:700;color:var(--ink)}
+p strong{font-weight:700;color:var(--ink)}
+.grp td{font-family:var(--body);font-style:italic;color:var(--mut);background:transparent}
+.note{font-size:.92rem;color:var(--mut)}
+pre{margin:0;overflow-x:auto;background:var(--card);border:1px solid var(--rule);border-radius:6px;padding:14px 16px;font:.84rem/1.5 var(--mono)}
+.bib{display:flex;flex-direction:column;gap:10px;align-items:flex-start;min-width:0}
+.bib pre{width:100%;max-width:100%}
+button{font:500 .85rem var(--mono);color:var(--ink);background:var(--card);border:1px solid var(--rule);border-radius:4px;padding:6px 12px;cursor:pointer}
+button:hover{border-color:var(--accent)}
+footer{border-top:1px solid var(--rule);padding-top:16px;font-size:.88rem;color:var(--mut)}
+/* sticky section nav, single-column room section, figure zoom */
+.topnav{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;display:flex;flex-wrap:wrap;gap:2px 4px;margin:-18px 0 -24px;padding:8px 0;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--rule)}
+.topnav a{font:500 .8rem var(--mono);letter-spacing:.02em;color:var(--mut);text-decoration:none;padding:5px 9px;border-radius:4px}
+.topnav a:hover{color:var(--accent);background:var(--card)}
+.stack{display:flex;flex-direction:column;gap:22px}
+.stack figure{max-width:560px}
+/* two figures in one row at the SAME HEIGHT: each figure's share of the width is its aspect ratio (flex-grow = w/h) */
+.figs{display:flex;gap:20px;align-items:flex-start}
+.figs figure{flex:0 1 0;min-width:0;max-width:none}
+.figs figcaption{font-size:.9rem}
+@media (max-width:700px){.figs{flex-direction:column}.figs figure{flex:none;width:100%}}
+.stack .tbl td:nth-child(2){font-family:var(--body);font-size:.92rem;text-align:left}
+.stack .tbl th:nth-child(2){text-align:left}
+.two.side{grid-template-columns:minmax(300px,5fr) minmax(300px,6fr)}
+@media (max-width:760px){.two.side{grid-template-columns:1fr}}
+.two.side td:first-child,.two.side th:first-child{white-space:normal}
+figure img.zoom{cursor:zoom-in}
+/* chapter bar under the reel: the same sections as the track burned into the video, click to jump */
+.chap{display:flex;gap:3px;margin-top:2px}
+.chap button{flex:1 1 0;min-width:0;display:flex;flex-direction:column;gap:5px;padding:0;border:0;background:transparent;cursor:pointer;text-align:center;font:600 .82rem var(--body);color:var(--mut)}
+.chap button i{display:block;height:12px;border-radius:6px;background:var(--c);opacity:.38;position:relative;overflow:hidden}
+.chap button i::after{content:"";position:absolute;inset:0;width:var(--p,0%);background:var(--c)}
+.chap button.on{color:var(--ink)} .chap button.on i{opacity:1}
+.chap button.on i::after{background:#fff;opacity:.35}
+.chap button:hover i{opacity:.8}
+.chap button span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 2px}
+#lb{position:fixed;inset:0;z-index:50;display:grid;grid-template-rows:1fr auto;place-items:center;gap:10px;padding:24px;background:rgba(10,12,14,.9);cursor:zoom-out}
+#lb img{max-width:100%;max-height:calc(100vh - 90px);width:auto;height:auto;border-radius:4px;background:#fff;cursor:default}
+#lb-cap{color:#dfe4e8;font-size:.9rem;max-width:90ch;text-align:center}
+#lb-close{position:absolute;top:14px;right:16px;font:400 1.6rem/1 var(--body);color:#fff;background:transparent;border:0;padding:6px 10px;cursor:pointer}
+section{scroll-margin-top:56px}
+/* contents in the left margin on wide screens; the sticky top bar remains for narrower ones */
+.toc{display:none}
+@media (min-width:1300px){
+  /* the contents become a sidebar column of the page grid (never off-screen); the top bar is hidden */
+  .wrap{max-width:1132px;margin:0 auto 0 clamp(16px,3vw,56px);display:grid;grid-template-columns:164px minmax(0,940px);column-gap:28px;row-gap:0;align-items:start}
+  .wrap > *:not(.toc):not(:last-child){margin-bottom:56px}   /* spacing on the items, not the row gap: the sidebar spans more rows than there are sections, and empty rows must not add gaps */   /* left-anchored: the sidebar hugs the window edge */
+  .wrap > *{grid-column:2;min-width:0}
+  .topnav{display:none}
+  section{scroll-margin-top:24px}
+  .toc{grid-column:1;grid-row:2 / span 40;position:sticky;top:28px;display:flex;flex-direction:column;gap:1px;width:164px;padding:4px 0 4px 10px;border-left:1px solid var(--rule);font:500 .95rem/1.35 var(--body)}
+  .toc-h{font:600 .78rem var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin-bottom:6px}
+  .toc a{color:var(--mut);text-decoration:none;padding:3px 6px;margin-left:-11px;border-left:2px solid transparent;border-radius:0 4px 4px 0}
+  .toc a:hover{color:var(--ink);background:var(--card)}
+  .toc a.on{color:var(--accent);border-left-color:var(--accent);font-weight:600}
+  .toc a.sub{padding-left:18px;font-size:.88rem}
+}
+/* interactive robot lab: scene strip, a dark 3D viewport in both themes, playback controls */
+[hidden]{display:none!important}
+.lab{display:flex;flex-direction:column;gap:14px;scroll-margin-top:16px}
+.lab-scenes{display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;scrollbar-width:thin}
+.lab-scene{flex:0 0 132px;display:flex;flex-direction:column;gap:5px;padding:6px;text-align:left;font:600 .82rem/1.25 var(--body);white-space:normal}
+.lab-scene img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:3px;background:var(--stage)}
+.lab-scene small{display:block;font:400 .72rem var(--mono);color:var(--mut)}
+.lab-scene[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.lab-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;background:var(--ok)}
+.lab-dot.bad{background:var(--hinge)}
+#lab-stage{position:relative;height:min(64vh,620px);min-height:320px;border:1px solid var(--rule);border-radius:6px;overflow:hidden;background:var(--stage);color:var(--stage-ink)}
+#lab-stage canvas{display:block;width:100%;height:100%;touch-action:none}
+#lab-cover{position:absolute;inset:0;display:grid;place-items:center;padding:20px;text-align:center}
+#lab-cover img{position:absolute;inset:0;width:100%;height:100%;max-width:none;object-fit:cover;filter:blur(14px) brightness(.5);transform:scale(1.08)}
+#lab-cover > div{position:relative;display:flex;flex-direction:column;gap:12px;align-items:center;max-width:44ch}
+#lab-coverTitle{font:700 clamp(20px,2.6vw,28px)/1.15 var(--display);text-wrap:balance}
+#lab-coverNote{font-size:.9rem;color:var(--stage-mut)}
+#lab-load{font-size:.95rem;padding:10px 18px;background:var(--pred);border-color:var(--pred);color:var(--pred-ink)}
+#lab-load:hover{border-color:var(--stage-ink)}
+#lab-load:disabled{opacity:.6;cursor:progress}
+#lab-busy{position:absolute;inset:0;display:grid;place-items:center;padding:16px;text-align:center;background:var(--stage-veil)}
+#lab-hud{position:absolute;left:12px;top:10px;font:400 .78rem/1.5 var(--mono);pointer-events:none;text-shadow:0 1px 2px var(--stage)}
+#lab-hud b{font-weight:500;color:var(--pred)}
+.lab-row{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center}
+.lab-grp{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center}
+.lab-lab{font:500 .74rem var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--mut)}
+.lab-seg{display:flex;flex-wrap:wrap;gap:4px}
+.lab-seg button.on{border-color:var(--accent);background:var(--ours)}
+.lab-chk{display:inline-flex;align-items:center;gap:6px;font-size:.92rem;cursor:pointer}
+.lab-chk i{display:inline-block;width:14px;height:4px;border-radius:2px}
+.lab-task{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center;justify-content:space-between}
+.lab-task > div:first-child{min-width:0;flex:1 1 320px;display:flex;flex-direction:column;gap:4px}
+.lab-task p{font-size:.95rem;color:var(--mut)}
+.lab-acts{display:flex;flex-wrap:wrap;gap:8px}
+.lab-acts button{font-size:.92rem;padding:8px 14px}
+.lab-acts button:disabled,#lab-time:disabled{opacity:.45;cursor:not-allowed}
+button.lab-primary{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.lab-badge{font:500 .8rem var(--mono);padding:2px 8px;border-radius:3px;border:1px solid var(--ok);color:var(--ok)}
+.lab-badge.bad{border-color:var(--hinge);color:var(--hinge)}
+.lab-time{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center}
+.lab-time select{font:500 .85rem var(--mono);color:var(--ink);background:var(--card);border:1px solid var(--rule);border-radius:4px;padding:6px 8px}
+#lab-time{width:100%;accent-color:var(--accent)}
+#lab-phases{display:flex;height:16px;border-radius:3px;overflow:hidden;margin-top:4px}
+#lab-phases span{display:block;overflow:hidden;white-space:nowrap;font:500 .64rem/16px var(--mono);color:#fff;text-align:center}
+#lab-tlabel{font:400 .85rem var(--mono);font-variant-numeric:tabular-nums;min-width:6ch;text-align:right}
+
+/* Two reading depths: concise overview, optional experimental detail. */
+.evidence{padding:14px 18px;border-left:3px solid var(--accent);background:var(--card)}
+.read-more{border:1px solid var(--rule);border-radius:6px;padding:14px 18px;min-width:0}
+.read-more summary{cursor:pointer;font-weight:600;color:var(--accent)}
+.read-more summary span{font-weight:400;font-size:.95rem;color:var(--mut);margin-left:10px}
+.read-more summary:focus-visible{outline:2px solid var(--accent);outline-offset:5px}
+.read-more[open] summary{margin-bottom:16px}
+.read-more p+ p,.read-more .tbl+p{margin-top:12px}
+section,header{scroll-margin-top:70px}
+@media(max-width:600px){.read-more{padding:12px}.ideas{grid-template-columns:1fr}}
+@media print{.read-more>*{display:block!important}}
+
+/* Keep the scene and video comparisons compact; click an image to zoom. */
+#rooms > figure, #arti4d .figs figure{width:100%;max-width:480px;align-self:center}
+#rooms > figure{flex:none!important}
+#arti4d .figs figure{flex:0 1 480px!important}
+#arti4d .figs{justify-content:center}
+@media(max-width:700px){#arti4d .figs figure{flex:none!important;align-self:center}}
+
+/* Method: input/model/output strip, then the three representation choices and the three training ingredients as cards. */
+.method-details[open] summary{margin-bottom:4px}
+.method-details+.method-details{margin-top:-6px}
+#method > .method-io{margin-top:4px}
+.method-io{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px 28px;padding:16px 18px;border-radius:6px;background:var(--card)}
+.method-io > div{min-width:0;display:flex;flex-direction:column;gap:4px}
+.method-io p{font-size:.95rem;line-height:1.55;color:var(--mut)}
+.eyebrow{font:500 .74rem var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.method-h{margin-top:30px;font:600 1.12rem/1.3 var(--display)}
+.method-h span{font:400 .95rem var(--body);color:var(--mut);margin-left:10px}
+.method-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;margin:14px 0 0;padding:0;list-style:none;counter-reset:idea}
+.method-idea{min-width:0;border-top:2px solid var(--accent);padding-top:12px;display:flex;flex-direction:column;gap:9px}
+.method-grid.train .method-idea{border-top-color:var(--rule)}
+.method-idea h4{margin:0;font:600 1rem/1.3 var(--body);text-wrap:balance}
+.method-grid.num .method-idea h4::before{counter-increment:idea;content:counter(idea);font:500 .85rem var(--mono);color:var(--accent);margin-right:8px}
+.method-idea p{font-size:.95rem;line-height:1.55;color:var(--mut)}
+.method-idea p+p{margin-top:0}
+/* representation cards: title, problem and "what we do" share row lines across the three columns */
+.method-grid.num{grid-auto-rows:auto}
+.method-grid.num > .method-idea{display:grid;grid-template-rows:subgrid;grid-row:span 3;align-content:start}
+.method-idea ul{margin:0;padding-left:17px;display:flex;flex-direction:column;gap:5px;font-size:.95rem;line-height:1.5;color:var(--mut)}
+.method-idea li{padding-left:2px}
+.method-idea .lbl{display:block;font:500 .72rem var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink);margin-bottom:3px}
+.method-idea strong,.method-io strong{color:var(--ink);font-weight:600}
+@media(max-width:760px){.method-grid,.method-io{grid-template-columns:1fr;gap:18px}}
+
+#tldr > strong:first-child{font-size:1.3em;margin-right:0.6em}
+
+header .chip{display:inline-flex;align-items:center;gap:8px}
+.chip-icon{width:18px;height:18px;flex:none;vertical-align:middle}
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+  <header id="overview">
+<h1>ViewStruct<span>View-grounded articulation and connectivity inference</span></h1>
+<div class="authors">Wenjing Bian<sup>1</sup>, Ranran Huang<sup>2</sup>, Andreas Geiger<sup>1</sup><small><sup>1</sup>University of Tübingen, Tübingen AI Center  ·  <sup>2</sup>Imperial College London</small></div>
+<div class="chips">
+<span class="chip off"><svg aria-hidden="true" class="chip-icon" fill="none" focusable="false" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" viewbox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6M8 13h8M8 17h6"></path></svg>Paper</span>
+<span class="chip off"><svg aria-hidden="true" class="chip-icon" fill="none" focusable="false" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" viewbox="0 0 24 24"><path d="m8 6-6 6 6 6m8-12 6 6-6 6M14 4l-4 16"></path></svg>Code: coming soon</span>
+<a class="chip" href="#video"><svg aria-hidden="true" class="chip-icon" fill="none" focusable="false" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" viewbox="0 0 24 24"><rect height="16" rx="3" width="18" x="3" y="4"></rect><path d="m10 8 6 4-6 4z"></path></svg>Demo</a>
+<a class="chip" href="#lab-section"><svg aria-hidden="true" class="chip-icon" fill="none" focusable="false" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" viewbox="0 0 24 24"><rect height="14" rx="3" width="16" x="4" y="7"></rect><path d="M12 7V3M9 3h6M1 12v5m22-5v5M9 17h6"></path><circle cx="8.5" cy="12" fill="currentColor" r=".8"></circle><circle cx="15.5" cy="12" fill="currentColor" r=".8"></circle></svg>Interactive robot lab</a>
+<a class="chip" href="#cite"><svg aria-hidden="true" class="chip-icon" fill="none" focusable="false" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" viewbox="0 0 24 24"><path d="M10 5H4v7h6V5Zm0 7v3c0 3-2 4-5 4M20 5h-6v7h6V5Zm0 7v3c0 3-2 4-5 4"></path></svg>BibTeX</a>
+</div>
+<p class="evidence" id="tldr"><strong>TL;DR</strong> ViewStruct predicts <strong>how parts connect and move</strong> in objects and scenes from segmented RGB-D observations <strong>in seconds</strong>. A <strong>single static observation is sufficient</strong>, while additional motion observations can improve its predictions. Its predictions are <strong>view-grounded</strong>, with joint parameters expressed in the input view’s coordinate frame.</p>
+
+
+<figure>
+<video aria-label="ViewStruct teaser showing object and scene articulation, real-world interactions, and simulated robot manipulation" autoplay loop muted playsinline preload="auto" src="assets/ViewStruct_teaser.mp4" width="1600" height="640" style="height:auto"></video>
+</figure>
+
+
+
+</header>
+  <nav class="topnav" aria-label="Sections"><a href="#overview">Overview</a><a href="#method">Method</a><a href="#video">Demo</a><a href="#results">Results</a><a href="#manip">Manipulation</a><a href="#lab-section">Robot lab</a><a href="#cite">BibTeX</a></nav>
+  <nav class="toc" id="toc" aria-label="Contents"><div class="toc-h">Contents</div><a href="#overview">Overview</a><a href="#method">Method</a><a href="#video">Demo</a><a href="#results">Results</a><a class="sub" href="#objects">Object prediction</a><a class="sub" href="#rooms">Scene prediction</a><a class="sub" href="#unseen">Generalisation</a><a class="sub" href="#arti4d">Real-world video</a><a href="#manip">Manipulation</a><a href="#lab-section">Robot lab</a><a href="#cite">BibTeX</a></nav>
+
+  <section id="method">
+<h2>From observed parts to structure</h2><div class="method-io">
+    <div><span class="eyebrow">Input</span>
+      <p>An RGB image with <strong>part masks and depth</strong>, plus optional extra views or a clip. The prompt lists each part with its id, box and depth range.</p></div>
+    <div><span class="eyebrow">Model</span>
+      <p><strong>Qwen3-VL-4B</strong>, fine-tuned to write the structure out token by token. No per-instance optimisation, no refinement loop.</p></div>
+    <div><span class="eyebrow">Output</span>
+      <p>Which parts form <strong>rigid bodies</strong>, how the bodies <strong>attach</strong>, and the <strong>parameters of every joint</strong>.</p></div>
+  </div>
+<figure>
+<img alt="Method overview: image, part segmentation and depth go into a vision-language model that outputs rigid-body groups and joints in a view-relative frame" src="assets/viewstruct.jpg"/>
+</figure>
+<details class="read-more method-details">
+<summary>Representation <span>three ambiguities, three solutions</span></summary>
+<ol class="method-grid num"><li class="method-idea"><h4>Gravity-aligned, view-relative coordinates</h4><p><span class="lbl">Problem</span>Canonical orientations can be ambiguous for unfamiliar or symmetric objects and differ across objects in a scene.</p><p><span class="lbl">What we do</span>Joints are expressed in a frame built from what is visible: the origin and unit come from the object's silhouette and median depth, <strong>z points against gravity</strong> and <strong>x is the viewing direction projected onto the floor</strong>. No category-specific front is needed, and camera pitch and roll drop out, so vertical hinges and horizontal slides keep simple directions. Gravity comes from the renderer or the device pose. In a scene, one reference object defines the frame and all objects share it.</p></li><li class="method-idea"><h4>Joint-centred connectivity</h4><p><span class="lbl">Problem</span>Separate regions can belong to one rigid body. Predicting a parent for each region introduces arbitrary internal hierarchies.</p><p><span class="lbl">What we do</span>The output is a <strong>static base plus one moving body per joint</strong>. Each body names the regions that move together, the body it hangs from, and its joint: type, axis, pivot and motion limits. Bodies can attach to other moving bodies, so nested mechanisms are covered. A fixed convention then expands this into the part-level parent map, and targets come out a third shorter than a per-part tree.</p></li><li class="method-idea"><h4>Image-grounded pivots</h4><p><span class="lbl">Problem</span>Direct 3D pivot prediction does not enforce correspondence with a location in the input image.</p><p><span class="lbl">What we do</span>Each hinge pivot is written as a <strong>point in the image plus a depth offset</strong> from the frame centre, and the 3D pivot is recovered by back-projection. The model can point at the hinged edge it sees, and the pivot is guaranteed to project back onto that point. Axis directions are predicted directly in 3D, since their image projections can be degenerate.</p></li></ol>
+</details>
+<details class="read-more method-details">
+<summary>Training <span>one corpus for objects and scenes</span></summary>
+<ul class="method-grid train">
+<li class="method-idea"><h4>Unified supervision</h4><p>We convert annotated assets into a <strong>common target for objects and scenes</strong>, with consistent coordinates, units, and rigid-body groupings. Persistent part IDs link image regions to geometry.</p></li>
+<li class="method-idea"><h4>Static and dynamic observations</h4><p><strong>Static views</strong> provide appearance and spatial cues; <strong>articulation clips</strong> reveal relative motion. Both supervise the same structure, with varied viewpoints exposing different appearances and visibility patterns.</p></li>
+<li class="method-idea"><h4>Part-decomposition augmentation</h4><p>We <strong>split parts or merge compatible sibling regions</strong>, then update the part inventory and re-render the segmentation. The kinematics stay unchanged, encouraging robustness to different part decompositions.</p></li>
+</ul>
+</details>
+</section>
+
+<section id="video">
+<h2>Demo <span class="h2sub">Prediction visualisations and a simulated robot acting on the predicted joints</span></h2>
+<figure>
+<video controls="" id="reel" playsinline="" poster="assets/demo_poster.jpg" preload="metadata" src="assets/demo_1080.mp4"></video>
+<div aria-label="Jump to a section of the video" class="chap" id="chap" role="group"></div>
+</figure>
+</section>
+
+<section id="results">
+<h2>Results <span class="h2sub">Visual comparisons and tables on objects, rooms, unseen sources and real video</span></h2>
+<h3 class="sub" id="objects">Object prediction <span>PhysX-Mobility</span></h3>
+
+<figure>
+<img alt="Qualitative comparison on PhysX-Mobility: each method's predicted joints move the same reference meshes" src="assets/qual_physx.jpg"/>
+<figcaption>Predicted motion on reference geometry. Red: hinges; blue: slides; yellow: axes. Dimmed panels: no output.</figcaption>
+</figure>
+<details class="read-more"><summary>Metrics and evaluation details</summary><div class="tbl"><table><thead><tr><th>Method</th><th>Parent</th><th>Edge F1</th><th>Joint F1</th><th>Type</th><th>Axis</th><th>Pivot ↓</th><th>Range</th><th>Success, matched</th><th>Success, all joints</th><th>Success, objects</th><th>Time (s) ↓</th></tr></thead><tbody><tr><td>Qwen3-VL-4B, zero-shot</td><td>19.2</td><td>19.9</td><td>31.5</td><td>66.0</td><td>41.2</td><td>0.391</td><td>30.5</td><td>1.1</td><td>0.2</td><td>1.0</td><td>–</td></tr><tr><td>PhysX-Anything</td><td>61.0</td><td>67.9</td><td>85.9</td><td>96.2</td><td>94.4</td><td>0.118</td><td>26.3</td><td>81.6</td><td>64.3</td><td>40.2</td><td>267</td></tr><tr><td>PhysX-Omni</td><td>70.1</td><td>73.6</td><td>85.9</td><td><b>97.8</b></td><td><b>95.8</b></td><td>0.096</td><td>26.5</td><td><b>85.3</b></td><td>66.6</td><td>38.9</td><td>241</td></tr><tr><td>URDF-Anything+</td><td>17.3</td><td>14.7</td><td>18.6</td><td>73.0</td><td>58.5</td><td>0.269</td><td>34.1</td><td>14.0</td><td>1.5</td><td>2.3</td><td>64</td></tr><tr class="ours"><td>ViewStruct</td><td><b>92.3</b></td><td><b>92.7</b></td><td><b>96.8</b></td><td>96.6</td><td>89.9</td><td><b>0.084</b></td><td><b>72.3</b></td><td>81.5</td><td><b>78.2</b></td><td><b>52.5</b></td><td><b>6.5</b></td></tr><tr class="ours"><td>ViewStruct, depth estimated by MoGe</td><td><b>92.3</b></td><td>91.0</td><td>96.5</td><td>95.6</td><td>89.3</td><td>0.094</td><td>69.1</td><td>78.3</td><td>74.8</td><td>48.7</td><td><b>6.5</b></td></tr></tbody></table></div>
+<p class="note">Values are percentages, except pivot error in normalised asset units and time in seconds. Object success requires every reference joint to be recovered correctly. Generated parts are matched to reference parts by geometry.</p></details></section>
+
+<section id="rooms">
+<h3 class="sub">Scene-level prediction <span>GRScenes</span></h3>
+<div class="stack">
+<div style="display:flex;flex-direction:column;gap:14px">
+
+</div>
+</div>
+<figure style="flex-grow:0.944">
+<img alt="Room views: reference, PhysX-Omni and ViewStruct predictions" src="assets/scene_qual.jpg"/>
+<figcaption>Reference, PhysX-Omni, and ViewStruct on three room views.</figcaption>
+</figure>
+<details class="read-more"><summary>Metrics and evaluation details</summary><div class="tbl"><table><thead><tr><th>Method</th><th>Parse</th><th>Recall</th><th>Joint F1</th><th>Type</th><th>Axis</th><th>Pivot ↓</th><th>Range</th><th>Success, matched</th><th>Success, all joints</th></tr></thead><tbody><tr><td>OPDMulti</td><td><b>100.0</b></td><td>15.7</td><td>25.8</td><td>73.9</td><td>49.4</td><td>0.440</td><td>50.0</td><td>11.8</td><td>1.8</td></tr><tr><td>PhysX-Omni</td><td><b>100.0</b></td><td>30.3</td><td>40.4</td><td>66.7</td><td>49.7</td><td>0.400</td><td>8.1</td><td>24.4</td><td>7.4</td></tr><tr class="ours"><td>ViewStruct</td><td>98.9</td><td>94.7</td><td><b>95.2</b></td><td>77.6</td><td>62.1</td><td><b>0.331</b></td><td>72.2</td><td>26.2</td><td>24.8</td></tr><tr class="ours"><td>+ 2 views with parts moved</td><td>97.7</td><td><b>94.8</b></td><td><b>95.2</b></td><td><b>80.5</b></td><td><b>64.4</b></td><td>0.337</td><td><b>74.1</b></td><td><b>28.0</b></td><td><b>26.6</b></td></tr></tbody></table></div><p class="note">ViewStruct is trained on scene observations, and test views can contain training objects as neighbours. This evaluates scene prediction, not transfer to entirely unseen scenes. All-joint success includes missed joints as failures.</p></details></section>
+
+<section id="unseen">
+<h3 class="sub">Generalisation <span>Unseen SimReady and held-out GRScenes categories</span></h3>
+
+<figure><img alt="Predicted hinges and sliding joints on unseen SimReady assets" loading="lazy" src="assets/qual_simready.jpg"/><figcaption>Predicted articulation on unseen SimReady assets.</figcaption></figure>
+<details class="read-more"><summary>Metrics and evaluation details</summary><div class="tbl"><table><thead><tr><th>Method</th><th>Joint F1</th><th>Type</th><th>Axis</th><th>Pivot ↓</th><th>Range</th><th>Success, matched</th><th>Success, all joints</th></tr></thead><tbody><tr class="grp"><td colspan="8">SimReady objects (242)</td></tr><tr><td>Qwen3-VL-4B, zero-shot</td><td>17.9</td><td>46.7</td><td>39.3</td><td>0.382</td><td>24.6</td><td>0.0</td><td>0.0</td></tr><tr><td>PhysX-Anything</td><td>61.3</td><td>62.0</td><td>48.7</td><td>0.327</td><td>15.9</td><td>14.9</td><td>6.9</td></tr><tr><td>URDF-Anything+</td><td>33.0</td><td>65.7</td><td>52.1</td><td>0.239</td><td>31.1</td><td>2.8</td><td>0.6</td></tr><tr><td>PhysX-Omni</td><td>61.1</td><td>62.8</td><td>52.6</td><td>0.380</td><td>18.1</td><td>18.0</td><td>8.2</td></tr><tr class="ours"><td>ViewStruct</td><td><b>95.0</b></td><td><b>75.0</b></td><td><b>67.1</b></td><td><b>0.115</b></td><td><b>31.5</b></td><td><b>33.3</b></td><td><b>31.5</b></td></tr><tr class="grp"><td colspan="8">GRScenes objects, held-out categories (291)</td></tr><tr><td>Qwen3-VL-4B, zero-shot</td><td>43.4</td><td>33.7</td><td>25.6</td><td>0.229</td><td>22.6</td><td>0.0</td><td>0.0</td></tr><tr><td>PhysX-Anything</td><td>52.5</td><td>61.1</td><td>29.9</td><td>0.432</td><td>13.8</td><td>8.9</td><td>3.3</td></tr><tr><td>URDF-Anything+</td><td>26.6</td><td>37.6</td><td>25.6</td><td>0.386</td><td>28.7</td><td>0.8</td><td>0.1</td></tr><tr><td>PhysX-Omni</td><td>48.0</td><td>54.8</td><td>21.4</td><td>0.494</td><td>5.7</td><td>16.0</td><td>5.2</td></tr><tr class="ours"><td>ViewStruct</td><td><b>99.7</b></td><td><b>71.8</b></td><td><b>48.7</b></td><td><b>0.226</b></td><td><b>56.9</b></td><td><b>48.7</b></td><td><b>48.5</b></td></tr></tbody></table></div><p class="note">SimReady is an unseen asset source, although its categories can overlap training sources. The GRScenes categories are excluded from its training partition. Joint F1 measures which parts carry joints; articulation success also tests their parameters.</p></details></section>
+
+<section id="arti4d">
+<h3 class="sub">Real-world video <span>Arti4D</span></h3>
+<div class="stack">
+<div style="display:flex;flex-direction:column;gap:14px">
+<p>Despite training only on <strong>synthetic data</strong>, the model transfers to real videos. Adding motion evidence improves hinge-type accuracy from <strong>77.2% to 93.0%</strong>.</p>
+
+</div>
+<div class="figs">
+<figure style="flex-grow:0.943">
+<img alt="Arti4D interactions with reference and predicted axes over three frames" src="assets/qual_arti4d.jpg"/>
+<figcaption>Reference axes in red/blue; predictions in yellow. Dashed segments are occluded.</figcaption>
+</figure>
+</div>
+</div>
+<details class="read-more"><summary>Metrics and evaluation details</summary><div class="tbl"><table><thead><tr><th>Method</th><th>Visual input</th><th>Type acc. prism.</th><th>Type acc. revol.</th><th>Axis err. prism. ↓</th><th>Axis err. revol. ↓</th><th>Hinge pos. (m) ↓</th><th>n</th></tr></thead><tbody><tr><td>ArtiPoint</td><td>Full RGB-D sequence</td><td>75.3</td><td><b>97.3</b></td><td><b>20.5°</b> (<b>4.4°</b>)</td><td><b>20.9°</b> (10.3°)</td><td><b>0.19</b> (<b>0.12</b>)</td><td>338</td></tr><tr><td>OPDMulti</td><td>Initial RGB only</td><td>52.2</td><td>72.0</td><td>44.3° (32.5°)</td><td>42.8° (30.9°)</td><td>0.42 (0.37)</td><td>307</td></tr><tr class="ours"><td>ViewStruct</td><td>Initial RGB-D only</td><td>69.3</td><td>77.2</td><td>36.7° (17.0°)</td><td>37.6° (4.0°)</td><td>0.31 (0.22)</td><td>342</td></tr><tr class="ours"><td>ViewStruct</td><td>Initial RGB-D + 2 frames</td><td>81.5</td><td>91.2</td><td>27.3° (14.2°)</td><td>27.0° (1.8°)</td><td>0.27 (0.18)</td><td>341</td></tr><tr class="ours"><td>ViewStruct</td><td>Initial RGB-D + 2 frames + clip</td><td><b>86.0</b></td><td>93.0</td><td>28.6° (15.8°)</td><td>21.3° (<b>1.6°</b>)</td><td>0.23 (0.18)</td><td>342</td></tr></tbody></table></div><p class="note">ArtiPoint receives the full RGB-D sequence, temporal camera poses, and reference interaction cues. ViewStruct receives an initial RGB-D observation and the listed RGB frames or clip, without temporal camera poses. Errors are means with medians in parentheses; n is the number of scored interactions.</p></details></section>
+
+<section id="manip">
+<h2>Using the predicted joints</h2>
+<p>The predicted joints also define <strong>opening trajectories</strong>. A simulated gripper opens <strong>74.6%</strong> of reference joints, increasing to <strong>80.3%</strong> with one direction-reversal retry.</p>
+
+<figure>
+<img alt="A Panda arm in MuJoCo opening parts of GRScenes rooms along ViewStruct's predicted joints" src="assets/mujoco_manip.jpg"/>
+<figcaption>Panda manipulation in MuJoCo. <a href="#lab-section">Explore the recorded runs below.</a></figcaption>
+</figure>
+<details class="read-more"><summary>Metrics and evaluation details</summary><div class="tbl"><table><thead><tr><th>Joints from</th><th>Attempted</th><th>Opens</th><th>Opens, one retry in the other direction</th></tr></thead><tbody><tr><td>Reference (oracle)</td><td>100.0</td><td>99.9</td><td>99.9</td></tr><tr><td>PhysX-Anything</td><td>57.2</td><td>50.3</td><td>52.3</td></tr><tr><td>URDF-Anything+</td><td>11.3</td><td>4.4</td><td>4.9</td></tr><tr><td>PhysX-Omni</td><td>56.5</td><td>48.9</td><td>51.2</td></tr><tr class="ours"><td>ViewStruct</td><td>91.3</td><td><b>74.6</b></td><td><b>80.3</b></td></tr></tbody></table></div><p class="note">Missing predictions count as failures. We supply contact locations and simplify the physics to isolate articulation quality. These trials do not test grasp discovery or real-robot performance.</p></details></section>
+
+<section id="lab-section">
+<h2>Interactive robot lab</h2>
+<div class="lab" id="lab"><p>Here the Panda follows a <strong>predicted joint trajectory</strong>, while the object retains its <strong>reference mechanism</strong>. Errors in the prediction can prevent the part from opening.</p><p class="note"><strong>Recorded MuJoCo runs.</strong> Yellow: predicted joint. Teal: reference joint. The controls replay existing trajectories.</p>
+<div aria-label="Rooms" class="lab-scenes" id="lab-scenes" role="group"></div>
+<div id="lab-stage">
+<div hidden="" id="lab-hud"><b id="lab-hudTitle"></b><br/><span id="lab-hudPhase"></span><br/><span id="lab-hudQ"></span></div>
+<div hidden="" id="lab-busy"></div>
+<div id="lab-cover">
+<img alt="" id="lab-coverImg" src="robotlab/thumbs/washer_door.jpg"/>
+<div>
+<div id="lab-coverTitle">Open the cabinet door beside the washing machine</div>
+<button id="lab-load" type="button">Load this room in 3D</button>
+<div id="lab-coverNote">Downloads the 3D viewer and one room, 6 to 14 MB.</div>
+</div>
+</div>
+</div>
+<div class="lab-task">
+<div><h3 id="lab-taskTitle">Open the cabinet door beside the washing machine</h3><p id="lab-taskInfo">Home 1 · hinge joint</p></div>
+<div class="lab-acts">
+<button class="lab-primary" disabled="" id="lab-place" type="button">Show robot</button>
+<button disabled="" id="lab-run" type="button">▶ Replay task</button>
+<button disabled="" id="lab-reset" type="button">Reset</button>
+</div>
+</div>
+<div class="lab-time">
+<select aria-label="Playback speed" id="lab-speed"><option value="0.5">0.5×</option><option selected="" value="1">1×</option><option value="2">2×</option></select>
+<div><input aria-label="Time in the run" disabled="" id="lab-time" max="1000" min="0" step="1" type="range" value="0"/><div id="lab-phases"></div></div>
+<div id="lab-tlabel">0.00 s</div>
+</div>
+<div class="lab-row">
+<div class="lab-grp"><span class="lab-lab">Camera</span>
+<div class="lab-seg"><button class="on" id="lab-camView" type="button">Model's view</button><button id="lab-camSide" type="button">Third person</button><button id="lab-camFree" type="button">Free orbit</button><button id="lab-camTop" type="button">Top down</button></div>
+</div>
+<div class="lab-grp"><span class="lab-lab">Show</span>
+<label class="lab-chk"><input checked="" id="lab-tPred" type="checkbox"/> <i style="background:var(--pred)"></i> Predicted joint</label>
+<label class="lab-chk"><input checked="" id="lab-tRef" type="checkbox"/> <i style="background:var(--ref)"></i> Reference joint</label>
+<label class="lab-chk"><input checked="" id="lab-tTrail" type="checkbox"/> <i style="background:var(--robot)"></i> Gripper path</label>
+<label class="lab-chk"><input checked="" id="lab-tRoom" type="checkbox"/> Room</label>
+<label class="lab-chk"><input id="lab-tCut" type="checkbox"/> Cut ceiling</label>
+</div>
+</div>
+</div>
+</section>
+
+<section id="cite">
+<h2>BibTeX</h2>
+<div class="bib">
+<pre id="bibtex">@article{bian2026viewstruct,
+  title   = {ViewStruct: View-Grounded Articulation and Connectivity Inference},
+  author  = {Bian, Wenjing and Huang, Ranran and Geiger, Andreas},
+  journal = {arXiv preprint},
+  year    = {2026}
+}</pre>
+<button id="copy" type="button">Copy BibTeX</button>
+</div>
+</section>
+
+</div>
+<div id="lb" hidden><img alt=""><div id="lb-cap"></div><button type="button" id="lb-close" aria-label="Close">&times;</button></div>
+<script>
+(function () {
+  // chapter bar under the reel, from the reel's own chapter table (make_demo_video.py writes it next to the mp4)
+  const CH = [{"label": "Title", "start": 0.0, "end": 2.6, "color": "#4a4e54"}, {"label": "Objects", "start": 2.6, "end": 16.1, "color": "#4a8cdd"}, {"label": "Unseen sources", "start": 16.1, "end": 44.1, "color": "#3fae9a"}, {"label": "Rooms", "start": 44.1, "end": 57.6, "color": "#9a7ad1"}, {"label": "Real video", "start": 57.6, "end": 75.6, "color": "#e0a33c"}, {"label": "Robot", "start": 75.6, "end": 98.1, "color": "#5cbe82"}];
+  const v = document.getElementById('reel'), bar = document.getElementById('chap');
+  if (v && bar) {
+    const segs = CH.filter(c => c.label !== 'Title');
+    const btns = segs.map(c => {
+      const b = document.createElement('button'); b.type = 'button'; b.style.setProperty('--c', c.color); b.style.flexGrow = String(c.end - c.start);
+      b.innerHTML = '<i></i><span>' + c.label + '</span>'; b.title = 'Jump to ' + c.label; b.addEventListener('click', () => { v.currentTime = c.start + 0.05; v.play(); });
+      bar.appendChild(b); return b;
+    });
+    const tick = () => { const t = v.currentTime; segs.forEach((c, i) => { const on = t >= c.start && t < c.end; btns[i].classList.toggle('on', on); btns[i].querySelector('i').style.setProperty('--p', (on ? 100 * (t - c.start) / (c.end - c.start) : (t >= c.end ? 100 : 0)) + '%'); }); };
+    v.addEventListener('timeupdate', tick); v.addEventListener('seeked', tick); tick();
+  }
+  // contents: light the entry of the section nearest the top of the viewport
+  const toc = document.getElementById('toc');
+  if (toc) {
+    const links = [...toc.querySelectorAll('a')]; const secs = links.map(a => document.querySelector(a.getAttribute('href'))).filter(Boolean);
+    const mark = () => { let cur = secs[0]; for (const sct of secs) { if (sct.getBoundingClientRect().top <= 140) cur = sct; } links.forEach(a => a.classList.toggle('on', a.getAttribute('href') === '#' + cur.id)); };
+    addEventListener('scroll', mark, { passive: true }); addEventListener('resize', mark); mark();
+  }
+  // click any figure image (not the lab thumbnails) to see it at full resolution
+  const lb = document.getElementById('lb'), img = lb.querySelector('img'), cap = document.getElementById('lb-cap');
+  const close = () => { lb.hidden = true; img.src = ''; document.body.style.overflow = ''; };
+  document.querySelectorAll('figure > img').forEach(el => {
+    el.classList.add('zoom');
+    el.addEventListener('click', () => { img.src = el.currentSrc || el.src; const c = el.parentElement.querySelector('figcaption'); cap.textContent = c ? c.textContent : (el.alt || ''); lb.hidden = false; document.body.style.overflow = 'hidden'; });
+  });
+  lb.addEventListener('click', e => { if (e.target !== img) close(); });
+  document.getElementById('lb-close').addEventListener('click', close);
+  addEventListener('keydown', e => { if (e.key === 'Escape' && !lb.hidden) close(); });
+})();
+document.getElementById('copy').addEventListener('click', async () => {
+  const b = document.getElementById('copy'), pre = document.getElementById('bibtex');
+  try { await navigator.clipboard.writeText(pre.textContent); b.textContent = 'Copied'; }
+  catch (e) { const r = document.createRange(); r.selectNodeContents(pre); const s = getSelection(); s.removeAllRanges(); s.addRange(r); b.textContent = 'Selected'; }
+  setTimeout(() => { b.textContent = 'Copy BibTeX'; }, 1400);
+});
+</script>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+<script type="module">
+// Interactive robot lab. The scene list is inline so the strip is complete at load; three.js and a room are fetched only when asked for.
+const CATALOG = [{"id": "washer_door", "home": "Home 1", "title": "Laundry cabinet", "task": "Open the cabinet door beside the washing machine", "jtype": "hinge", "success": true, "why": ""}, {"id": "microwave_300b", "home": "Home 2", "title": "Microwave", "task": "Open the microwave door", "jtype": "hinge", "success": true, "why": ""}, {"id": "nightstand_drawer", "home": "Home 3", "title": "Nightstand", "task": "Pull out the nightstand drawer", "jtype": "slide", "success": true, "why": ""}, {"id": "fridge_447a", "home": "Home 4", "title": "Refrigerator", "task": "Open the refrigerator door", "jtype": "hinge", "success": true, "why": ""}, {"id": "chest_e73f", "home": "Home 6", "title": "Chest of drawers", "task": "Pull out a drawer of the chest", "jtype": "slide", "success": true, "why": ""}, {"id": "door_85ca", "home": "Home 8", "title": "Room door", "task": "Open the room door", "jtype": "hinge", "success": true, "why": ""}, {"id": "window", "home": "Home 9", "title": "Window", "task": "Open the window sash", "jtype": "hinge", "success": true, "why": ""}, {"id": "shoecab_23be", "home": "Home 11", "title": "Shoe cabinet", "task": "Pull out the shoe cabinet drawer", "jtype": "slide", "success": true, "why": ""}];
+const DATA = 'robotlab/';
+const L = id => document.getElementById('lab-' + id);
+const stage = L('stage'), cover = L('cover'), busy = L('busy');
+const PRED = 0xe0b400, REF = 0x2aa198, ROBOT = 0xff7a3d;
+const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const TOGGLES = ['tPred', 'tRef', 'tTrail', 'tRoom', 'tCut'];
+const camBtns = { view: L('camView'), side: L('camSide'), free: L('camFree'), top: L('camTop') };
+let T = null, renderer, scene, camera, controls, cutPlane, lights, booting = null;
+let sel = CATALOG[0].id, cur = null, loadSeq = 0;
+let playing = false, tcur = 0, speed = 1, camMode = 'view', last = 0, dropT = 1, onScreen = true, autoCut = false;
+
+function say(text) { if (!cover.hidden) L('coverNote').textContent = text; else { busy.hidden = false; busy.textContent = text; } }
+
+function buildStrip() {
+  const strip = L('scenes');
+  for (const c of CATALOG) {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'lab-scene'; b.dataset.id = c.id; b.setAttribute('aria-pressed', String(c.id === sel));
+    b.innerHTML = `<img src="${DATA}thumbs/${c.id}.jpg" alt="" loading="lazy"><span>${c.title}<small><span class="lab-dot${c.success ? '' : ' bad'}"></span>${c.jtype} · ${c.success ? 'opens' : 'fails'}</small></span>`;
+    b.addEventListener('click', () => select(c.id));
+    strip.appendChild(b);
+  }
+}
+
+function select(id) {
+  sel = id; const c = CATALOG.find(x => x.id === id);
+  document.querySelectorAll('.lab-scene').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.id === id)));
+  if (renderer) { loadScene(id); return; }
+  L('coverImg').src = DATA + 'thumbs/' + id + '.jpg'; L('coverTitle').textContent = c.task;
+  L('taskTitle').textContent = c.task; L('taskInfo').textContent = c.home + ' · ' + c.jtype + ' joint';
+}
+
+function boot() {
+  if (!booting) booting = (async () => {
+    T = await import('three'); const { OrbitControls } = await import('three/addons/controls/OrbitControls.js');
+    try { renderer = new T.WebGLRenderer({ antialias: true }); }
+    catch (e) { throw new Error('this browser could not start WebGL (3D graphics). Try another browser, or turn on hardware acceleration.'); }
+    renderer.outputColorSpace = T.SRGBColorSpace; renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); stage.insertBefore(renderer.domElement, stage.firstChild);
+    renderer.toneMapping = T.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
+    renderer.shadowMap.enabled = true; renderer.shadowMap.type = T.PCFSoftShadowMap; renderer.shadowMap.autoUpdate = false;   // shadows are re-rendered only when something moved (see tick)
+    scene = new T.Scene(); scene.background = new T.Color(0x1c2127);
+    camera = new T.PerspectiveCamera(55, 1, 0.05, 80); camera.up.set(0, 0, 1);
+    controls = new OrbitControls(camera, renderer.domElement); controls.enableDamping = true;
+    controls.enableZoom = false;                                      // the wheel scrolls the page until the view has been clicked
+    stage.addEventListener('pointerdown', () => { controls.enableZoom = true; });
+    stage.addEventListener('pointerleave', () => { controls.enableZoom = false; });
+    lights = setupLights(scene, renderer);
+    cutPlane = new T.Plane(new T.Vector3(0, 0, -1), 0);
+    new ResizeObserver(resize).observe(stage); resize();
+    new IntersectionObserver(es => { onScreen = es[0].isIntersecting; }).observe(stage);
+    last = performance.now(); requestAnimationFrame(tick);
+  })();
+  return booting;
+}
+
+function resize() { const w = stage.clientWidth, h = stage.clientHeight; if (!w || !h) return; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
+
+// Lighting: a shadow-casting key light inside the room (placed per scene, see placeLights), a soft fill from the other side,
+// a sky/ground hemisphere and image-based ambient from a small procedural environment, so surfaces turn with the light and
+// the robot reads as a glossy object. Shadows are rendered on demand only (static room, moving robot).
+function setupLights(scene, renderer) {
+  const hemi = new T.HemisphereLight(0xe8eef4, 0x3d3a36, 0.55); scene.add(hemi);
+  const key = new T.DirectionalLight(0xfff4e6, 2.4); key.castShadow = true; key.shadow.mapSize.set(2048, 2048); key.shadow.bias = -0.0004; key.shadow.normalBias = 0.025; key.shadow.radius = 3;
+  const sc = key.shadow.camera; sc.near = 0.1; sc.far = 9; sc.left = -2.6; sc.right = 2.6; sc.top = 2.6; sc.bottom = -2.6; scene.add(key); scene.add(key.target);
+  const fill = new T.DirectionalLight(0xdfe8ff, 0.7); scene.add(fill); scene.add(fill.target);
+  // environment: a grey dome, brighter above, with two warm panels - a plausible indoor sky for the PBR materials
+  const env = new T.Scene(); const dome = new T.Mesh(new T.SphereGeometry(20, 24, 12), new T.MeshBasicMaterial({ side: T.BackSide, vertexColors: true }));
+  const pos = dome.geometry.attributes.position, col = []; const top = new T.Color(0xf2f4f6), hor = new T.Color(0x8e959c), bot = new T.Color(0x3a3734);
+  for (let i = 0; i < pos.count; i++) { const t = pos.getY(i) / 20; const c = t >= 0 ? hor.clone().lerp(top, t) : hor.clone().lerp(bot, -t); col.push(c.r, c.g, c.b); }
+  dome.geometry.setAttribute('color', new T.Float32BufferAttribute(col, 3)); env.add(dome);
+  for (const [x, y, z] of [[6, 9, -4], [-7, 7, 5]]) { const p = new T.Mesh(new T.PlaneGeometry(6, 4), new T.MeshBasicMaterial({ color: 0xfff1dc, side: T.DoubleSide })); p.position.set(x, y, z); p.lookAt(0, 0, 0); env.add(p); }
+  const pm = new T.PMREMGenerator(renderer); scene.environment = pm.fromScene(env, 0.04).texture; pm.dispose();
+  return { key, fill, hemi };
+}
+function placeLights(a, world, floor) {
+  // key light above and beside the work area on the robot's side; fill from the other side. Small rooms: a light behind a wall
+  // would shadow the whole room, so each light takes the first candidate spot with a clear line of sight to the handle.
+  const h = new T.Vector3(...a.handle), o = new T.Vector3(...a.outward), side = new T.Vector3().crossVectors(o, new T.Vector3(0, 0, 1)).normalize();
+  const zTop = floor + 2.25, ray = new T.Raycaster(), meshes = world.children;
+  const clear = p => { const d = p.clone().sub(h); const len = d.length(); ray.set(h, d.normalize()); ray.far = len - 0.05; return ray.intersectObjects(meshes, false).length === 0; };
+  const spot = (cands) => { for (const [f, s_, up] of cands) { const p = h.clone().addScaledVector(o, f).addScaledVector(side, s_); p.z = Math.min(h.z + up, zTop); if (clear(p)) return p; } const p = h.clone().addScaledVector(o, 0.4); p.z = Math.min(h.z + 0.9, zTop); return p; };
+  lights.key.position.copy(spot([[1.5, 1.3, 1.8], [1.5, -1.3, 1.8], [1.0, 0.9, 1.6], [1.0, -0.9, 1.6], [1.2, 0.3, 1.5], [0.7, 0.5, 1.4], [0.7, -0.5, 1.4], [0.5, 0, 1.2]]));
+  lights.fill.position.copy(spot([[1.0, -1.8, 1.2], [1.0, 1.8, 1.2], [0.8, -1.2, 1.0], [0.8, 1.2, 1.0], [0.6, 0, 0.8]]));
+  lights.key.target.position.copy(h); lights.key.target.position.z -= 0.2; lights.fill.target.position.copy(h);
+  lights.key.target.updateMatrixWorld(); lights.fill.target.updateMatrixWorld(); renderer.shadowMap.needsUpdate = true;
+}
+function mat(color) { return new T.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.35, roughness: 0.5, clippingPlanes: [] }); }
+function tube(a, b, color, r) { const len = a.distanceTo(b); const m = new T.Mesh(new T.CylinderGeometry(r, r, len, 12), mat(color)); m.position.copy(a).lerp(b, 0.5); m.quaternion.setFromUnitVectors(new T.Vector3(0, 1, 0), b.clone().sub(a).normalize()); return m; }
+function cone(p, d, color, r, len) { const m = new T.Mesh(new T.ConeGeometry(r, len, 14), mat(color)); m.position.copy(p).addScaledVector(d, len / 2); m.quaternion.setFromUnitVectors(new T.Vector3(0, 1, 0), d); return m; }
+function jointGlyph(j, a, color, r) {
+  const g = new T.Group(); if (!j) return g;
+  const ax = new T.Vector3(...j.axis).normalize(), h = new T.Vector3(...a.handle);
+  if (j.type === 'hinge') {
+    const p = j.position ? new T.Vector3(...j.position) : h.clone(); const q = p.clone().addScaledVector(ax, h.clone().sub(p).dot(ax));
+    g.add(tube(q.clone().addScaledVector(ax, -0.45), q.clone().addScaledVector(ax, 0.45), color, r));
+    const s = new T.Mesh(new T.SphereGeometry(r * 2.2, 16, 12), mat(color)); s.position.copy(q); g.add(s);
+  } else {
+    const out = new T.Vector3(...a.outward); const d = ax.dot(out) >= 0 ? ax : ax.clone().negate(); const end = h.clone().addScaledVector(d, 0.35);
+    g.add(tube(h, end, color, r)); g.add(cone(end, d, color, r * 3, 0.07));
+  }
+  return g;
+}
+
+const TYPES = { float32: Float32Array, uint32: Uint32Array, uint16: Uint16Array, int16: Int16Array, uint8: Uint8Array };
+function parseGeometry(buf) {
+  const u8 = new Uint8Array(buf); if (String.fromCharCode(...u8.subarray(0, 4)) !== 'MJW1') throw new Error('bad geometry file');
+  const hl = new DataView(buf).getUint32(4, true); const header = JSON.parse(new TextDecoder().decode(u8.subarray(8, 8 + hl))); const base = 8 + hl; const out = {};
+  for (const b of header.buffers) out[b.name] = new TYPES[b.dtype](buf.slice(base + b.offset, base + b.offset + b.length));
+  return out;
+}
+
+function disposeModule(m) {
+  if (!m) return; scene.remove(m.root);
+  m.root.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) { if (o.material.map) o.material.map.dispose(); o.material.dispose(); } });
+  m.urls.forEach(u => URL.revokeObjectURL(u));
+}
+
+async function loadScene(id) {
+  const entry = CATALOG.find(c => c.id === id); if (!entry) return;
+  const seq = ++loadSeq; playing = false; say('Loading the room…');
+  try {
+    const [metaR, geoR] = await Promise.all([fetch(DATA + id + '/meta.json'), fetch(DATA + id + '/geometry.wasm')]);
+    if (!metaR.ok || !geoR.ok) throw new Error('its files are missing');
+    const a = await metaR.json(); const geo = parseGeometry(await geoR.arrayBuffer());
+    if (seq !== loadSeq) return;                                       // another room was picked while this one downloaded
+    disposeModule(cur);
+    const m = { id, entry, a, root: new T.Group(), world: new T.Group(), robot: new T.Group(), urls: [], groups: {}, placed: false };
+    m.root.add(m.world); m.root.add(m.robot);
+    const texCache = {};
+    const tex = name => { if (!texCache[name]) { const url = URL.createObjectURL(new Blob([geo['tex.' + name]], { type: 'image/jpeg' })); m.urls.push(url);
+        const t = new T.TextureLoader().load(url); t.colorSpace = T.SRGBColorSpace; t.wrapS = t.wrapT = T.RepeatWrapping; texCache[name] = t; } return texCache[name]; };
+    for (const b of a.bodies) { const g = new T.Group(); g.name = b; m.groups[b] = g; (/^o\d+_/.test(b) ? m.root : m.robot).add(g); }
+    for (const p of a.parts) {
+      const g = new T.BufferGeometry(); g.setAttribute('position', new T.BufferAttribute(geo['p' + p.id + '.pos'], 3)); g.setIndex(new T.BufferAttribute(geo['p' + p.id + '.idx'], 1));
+      const nrm = geo['p' + p.id + '.nrm'];                              // smooth normals with hard edges kept, baked by the exporter; files baked before 5 Oct have none and are drawn faceted
+      if (nrm) g.setAttribute('normal', new T.BufferAttribute(nrm, 3, true)); else g.computeVertexNormals();
+      const robotPart = p.body !== 'world' && !/^o\d+_/.test(p.body);
+      const opt = { roughness: robotPart ? 0.42 : 0.8, metalness: robotPart ? 0.12 : 0.02, envMapIntensity: robotPart ? 0.9 : 0.5, side: T.DoubleSide, flatShading: !nrm, clippingPlanes: p.body === 'world' ? [cutPlane] : [],
+        polygonOffset: !!p.layer, polygonOffsetFactor: -(p.layer || 0), polygonOffsetUnits: -4 * (p.layer || 0) };   // parts modelled on the same plane as another one are drawn in a fixed order instead of z-fighting
+      let mt;
+      if (p.texture && geo['p' + p.id + '.uv'] && geo['tex.' + p.texture]) { g.setAttribute('uv', new T.BufferAttribute(geo['p' + p.id + '.uv'], 2)); mt = new T.MeshStandardMaterial({ map: tex(p.texture), color: 0xffffff, ...opt }); }
+      else mt = new T.MeshStandardMaterial({ color: new T.Color(p.color[0], p.color[1], p.color[2]), ...opt });
+      const mesh = new T.Mesh(g, mt); mesh.castShadow = true; mesh.receiveShadow = true; (p.body === 'world' ? m.world : m.groups[p.body]).add(mesh);
+    }
+    m.nodes = a.bodies.map(b => m.groups[b]);
+    m.pred = jointGlyph(a.pred_joint, a, PRED, 0.012); m.ref = jointGlyph(a.gt_joint, a, REF, 0.007); m.root.add(m.pred); m.root.add(m.ref);
+    const rb = a.robot_base; m.floor = rb[2];                         // where the robot stands, and the path its gripper takes
+    m.base = new T.Mesh(new T.RingGeometry(0.34, 0.4, 48), new T.MeshBasicMaterial({ color: ROBOT, side: T.DoubleSide, transparent: true, opacity: 0.9 }));
+    m.base.position.set(rb[0], rb[1], rb[2] + 0.012); m.root.add(m.base);
+    const hi = a.bodies.indexOf('hand');
+    if (hi >= 0) { const pts = a.poses.map(fr => new T.Vector3(fr[hi][0], fr[hi][1], fr[hi][2])); m.trail = new T.Line(new T.BufferGeometry().setFromPoints(pts), new T.LineBasicMaterial({ color: ROBOT })); m.trail.geometry.setDrawRange(0, 0); m.root.add(m.trail); }
+    cutPlane.constant = m.floor + 2.05; placeLights(a, m.world, m.floor);
+    scene.add(m.root); cur = m;
+    L('hudTitle').textContent = entry.title; L('taskTitle').textContent = entry.task;
+    const endQ = fmtQ(a.log[a.log.length - 1].q_gt);
+    L('taskInfo').innerHTML = `${entry.home} · ${a.gt_joint.type} joint · ` + (a.success ? `<span class="lab-badge">recorded run opens it: ${endQ}</span>` : `<span class="lab-badge bad">recorded run fails: ${endQ}</span>`) + (entry.why ? ` ${entry.why}` : '');
+    buildPhases(); L('place').disabled = false; setPlaced(false, true); applyToggles(); setCamera(camMode);
+    cover.hidden = true; busy.hidden = true; L('hud').hidden = false; resize();
+  } catch (e) { if (seq === loadSeq) { say('Could not load this room: ' + e.message); L('load').disabled = false; } }
+}
+
+function fmtQ(q) { return cur && cur.a.gt_joint.type === 'hinge' ? (Math.abs(q) * 180 / Math.PI).toFixed(0) + '°' : (Math.abs(q) * 100).toFixed(0) + ' cm'; }
+function buildPhases() {
+  const a = cur.a, el = L('phases'); el.innerHTML = ''; const tEnd = a.t[a.t.length - 1];
+  const cols = { pregrasp: '#5b6b7a', approach: '#6c8fa5', grasp: '#b0812a', open: '#c2501f', hold: '#3e5c4a' }; let ph = null, start = 0;
+  const add = (p, t0, t1) => { const s = document.createElement('span'); s.style.width = (100 * (t1 - t0) / tEnd) + '%'; s.style.background = cols[p] || '#777'; s.textContent = p; s.title = p; el.appendChild(s); };
+  a.log.forEach((l, i) => { if (l.phase !== ph) { if (ph) add(ph, start, l.t); ph = l.phase; start = l.t; } if (i === a.log.length - 1) add(ph, start, tEnd); });
+}
+
+function setPlaced(on, silent) {
+  if (!cur) return; cur.placed = on; playing = false;
+  cur.robot.visible = on; if (cur.trail) cur.trail.visible = on && L('tTrail').checked; renderer.shadowMap.needsUpdate = true;
+  L('place').textContent = on ? 'Hide robot' : 'Show robot'; L('place').classList.toggle('lab-primary', !on);
+  L('run').disabled = !on; L('reset').disabled = !on; L('time').disabled = !on; L('run').textContent = '▶ Replay task';
+  dropT = on && !silent && !REDUCED ? 0 : 1; applyTime(0);
+  L('hudPhase').textContent = on ? 'robot placed, ready' : 'no robot in the room';
+}
+
+function applyTime(t) {
+  if (!cur) return; const a = cur.a, ts = a.t, n = ts.length, tEnd = ts[n - 1];
+  t = Math.max(0, Math.min(tEnd, t)); tcur = t; let i = 0; while (i < n - 2 && ts[i + 1] <= t) i++;
+  const f = ts[i + 1] > ts[i] ? (t - ts[i]) / (ts[i + 1] - ts[i]) : 0; const qa = new T.Quaternion(), qb = new T.Quaternion();
+  for (let b = 0; b < cur.nodes.length; b++) { const p0 = a.poses[i][b], p1 = a.poses[i + 1][b], node = cur.nodes[b];
+    node.position.set(p0[0] + f * (p1[0] - p0[0]), p0[1] + f * (p1[1] - p0[1]), p0[2] + f * (p1[2] - p0[2]));
+    qa.set(p0[4], p0[5], p0[6], p0[3]); qb.set(p1[4], p1[5], p1[6], p1[3]); node.quaternion.slerpQuaternions(qa, qb, f); }
+  if (cur.trail) cur.trail.geometry.setDrawRange(0, i + 2);
+  const lg = a.log[Math.min(i, a.log.length - 1)];
+  if (cur.placed && t > 0) L('hudPhase').textContent = 'phase: ' + lg.phase;
+  L('hudQ').textContent = 'reference joint: ' + fmtQ(cur.placed ? lg.q_gt : 0);
+  L('time').value = Math.round(1000 * t / tEnd); L('tlabel').textContent = t.toFixed(2) + ' s'; renderer.shadowMap.needsUpdate = true;
+}
+
+function setCamera(mode) {
+  camMode = mode; for (const k in camBtns) camBtns[k].classList.toggle('on', k === mode);
+  if (mode !== 'top' && autoCut) { autoCut = false; L('tCut').checked = false; applyToggles(); }      // the cut that 'Top down' switched on goes away with it
+  if (!cur) return; const a = cur.a, h = new T.Vector3(...a.handle);
+  if (mode === 'view') { const c = a.cameras.view; camera.position.set(...c.eye); controls.target.set(...c.target); camera.fov = c.fov; }
+  else if (mode === 'side') { const c = a.cameras.side, q = c.quat_wxyz; camera.position.set(...c.pos); camera.quaternion.set(q[1], q[2], q[3], q[0]); controls.target.copy(camera.position).addScaledVector(new T.Vector3(0, 0, -1).applyQuaternion(camera.quaternion), 2.0); camera.fov = 50; }
+  else if (mode === 'top') { const mid = h.clone().lerp(new T.Vector3(...a.robot_base), 0.5); controls.target.set(mid.x, mid.y, cur.floor + 0.6); camera.position.set(mid.x, mid.y - 0.01, cur.floor + 6.5); camera.fov = 50; if (!L('tCut').checked) { L('tCut').checked = true; autoCut = true; applyToggles(); } }
+  else { controls.target.copy(h); const o = new T.Vector3(...a.robot_base).sub(h); o.z = 0; if (o.length() < 0.2) o.set(...a.outward); o.normalize(); const side =   // towards the robot's base: free floor by construction
+    new T.Vector3().crossVectors(o, new T.Vector3(0, 0, 1)).normalize(), ray = new T.Raycaster();
+    const hits = (p, objs, rec) => { const d = p.clone().sub(h); const len = d.length(); ray.set(h, d.normalize()); ray.far = len + 0.25; return ray.intersectObjects(objs, rec).length; };   // also 25 cm behind the spot: a camera 2 cm inside a panel would otherwise count as clear
+    let eye = null, best = 1e9;   // the spot with the clearest line of sight to the handle: walls count much more than the robot (a small bathroom puts the default spot behind a wall)
+    for (const [f, s_, up] of [[1.8, 1.1, 1.1], [1.8, -1.1, 1.1], [1.4, 0.9, 0.9], [1.4, -0.9, 0.9], [1.0, 0.7, 0.8], [1.0, -0.7, 0.8], [0.8, 0.4, 0.7], [0.8, -0.4, 0.7], [2.0, 0, 1.2], [1.3, 0, 0.9], [0.9, 0, 0.7]]) {
+      const p = h.clone().addScaledVector(o, f).addScaledVector(side, s_); p.z += up; const sc = 100 * hits(p, cur.world.children, false) + (cur.placed ? hits(p, cur.robot.children, true) : 0); if (sc < best) { best = sc; eye = p; } }
+    camera.position.copy(eye); camera.fov = 50; }
+  camera.updateProjectionMatrix(); controls.update();
+}
+
+function applyToggles() {
+  if (!renderer) return; renderer.localClippingEnabled = L('tCut').checked;
+  if (!cur) return;
+  cur.world.visible = L('tRoom').checked; cur.pred.visible = L('tPred').checked; cur.ref.visible = L('tRef').checked; renderer.shadowMap.needsUpdate = true;
+  if (cur.trail) cur.trail.visible = cur.placed && L('tTrail').checked;
+}
+
+function tick(now) {
+  const dt = Math.min(0.1, (now - last) / 1000); last = now;
+  if (cur) {
+    if (dropT < 1) { dropT = Math.min(1, dropT + dt / 0.5); const e = 1 - Math.pow(1 - dropT, 3); cur.robot.position.z = (1 - e) * 0.7; } else cur.robot.position.z = 0;
+    if (playing) { const tEnd = cur.a.t[cur.a.t.length - 1]; let t = tcur + dt * speed; if (t >= tEnd) { t = tEnd; playing = false; L('run').textContent = '▶ Run again'; } applyTime(t); }
+  }
+  if (cur && (playing || dropT < 1)) renderer.shadowMap.needsUpdate = true;
+  if (onScreen) { controls.update(); renderer.render(scene, camera); }
+  requestAnimationFrame(tick);
+}
+
+L('load').addEventListener('click', async () => {
+  L('load').disabled = true; say('Loading the 3D viewer…');
+  try { await boot(); await loadScene(sel); }
+  catch (e) { booting = renderer ? booting : null; say('Could not start the 3D view: ' + e.message); L('load').disabled = false; }
+});
+L('place').addEventListener('click', () => { if (cur) setPlaced(!cur.placed); });
+L('run').addEventListener('click', () => { if (!cur || !cur.placed) return; playing = !playing; if (playing && tcur >= cur.a.t[cur.a.t.length - 1] - 1e-3) tcur = 0; L('run').textContent = playing ? '❚❚ Pause' : '▶ Replay task'; });
+L('reset').addEventListener('click', () => { playing = false; L('run').textContent = '▶ Replay task'; applyTime(0); L('hudPhase').textContent = 'robot placed, ready'; });
+L('time').addEventListener('input', () => { if (!cur) return; playing = false; L('run').textContent = '▶ Replay task'; applyTime(L('time').value / 1000 * cur.a.t[cur.a.t.length - 1]); });
+L('speed').addEventListener('change', () => { speed = parseFloat(L('speed').value); });
+for (const k in camBtns) camBtns[k].addEventListener('click', () => setCamera(k));
+L('tCut').addEventListener('change', () => { autoCut = false; });
+TOGGLES.forEach(k => L(k).addEventListener('change', applyToggles));
+buildStrip();
+</script>
+
+</body>
+</html>
